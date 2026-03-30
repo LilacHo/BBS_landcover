@@ -1,9 +1,11 @@
+# Using NLCD to count categorical landcover pixels within 30-km buffer around a single point
+
 library(here) #setup
 library(terra) #raster data 
 library(sf)
 library(tidyverse)
 
-here::i_am("code/5_SinglePoint_v0.R")
+here::i_am("code/0_prepare_landcover_nlcd_v0.R")
 source("code/functions/pre_processing.R")
 
 ## input_file_path ####
