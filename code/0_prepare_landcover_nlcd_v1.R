@@ -1,20 +1,18 @@
+# Using NLCD to count categorical landcover pixels within 30-km buffer around a single point
+
 library(here) #setup
 library(terra) #raster data 
-# library(bbsBayes2)
 library(sf)
 library(tidyverse)
 
-here::i_am("code/5_SinglePoint_v1.R")
+here::i_am("code/0_prepare_landcover_nlcd_v1.R")
 source("code/functions/pre_processing.R")
 
 ## input_file_path ####
 product <- "LndCov"
 year <- 2024
 version <- 1
-# 
-# if (input_file_path != "") {
-#   input_file_path <- ""
-# }
+
 
 # LndChg2023 <- rast(here("data","Annual_NLCD_LndChg_2023_CU_C1V1", "Annual_NLCD_LndChg_2023_CU_C1V1.tif"))
 input_file_path <- input_file_path_server(product, year, version) #eg: ("LndChg", 2023, 0)
@@ -22,9 +20,9 @@ input_file_path <- input_file_path_server(product, year, version) #eg: ("LndChg"
 
 # print(input_file_path)
 if(file.exists(input_file_path)){
-  input_file_name <- paste0(product, year, "V", version) # eg: LndChg2023V0
+  input_file_name <- paste0(product, year, "V", version) # eg: LndChg2024V1
   # automatically assign the raster to a changeable variable name
-  # assign(input_file_name, rast(input_file_path)) # equivalent to: LndChg2023V0 <- rast(input_file_path)
+  # assign(input_file_name, rast(input_file_path)) # equivalent to: LndChg2024V1 <- rast(input_file_path)
   nlcd <- rast(input_file_path)
 } else{
   print(paste0(product, year,"V", version, " is not available"))
