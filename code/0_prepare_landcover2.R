@@ -1,7 +1,7 @@
 library(here) #setup
 library(tidyverse)
 
-here::i_am("code/5_LandCover_developed.R")
+here::i_am("code/0_prepare_landcover2.R")
 
 ## Routes ####
 Routes <- read.csv(here::here("data","Routes_2025Release.csv"), header = TRUE)
@@ -134,5 +134,5 @@ combined_data <- files %>%
   bind_rows()
 
 output_combinedfile_fullname <- paste0(target_Classes, ".csv")
-output_combinedfile_path <- here::here("output", target_Classes, output_file_fullname)
+output_combinedfile_path <- here::here("output", target_Classes, output_combinedfile_fullname)
 write.csv(combined_data, output_combinedfile_path, row.names = FALSE)
