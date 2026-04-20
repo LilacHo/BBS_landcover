@@ -4,7 +4,6 @@
 # ---------------------------------------------------------------
 
 library(here)
-library(terra)
 library(sf)
 library(tidyverse)
 
