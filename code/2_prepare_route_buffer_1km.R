@@ -1,4 +1,4 @@
-# 0_2_prepare_route_buffer_1km.R
+# 2_prepare_route_buffer_1km.R
 # Create 1-km buffers around the route lines.
 # Reproject the buffers to match the CRS of the NLCD product.
 # ---------------------------------------------------------------
@@ -7,7 +7,7 @@ library(here)
 library(sf)
 library(tidyverse)
 
-here::i_am("code/0_2_prepare_route_buffer_1km.R")
+here::i_am("code/2_prepare_route_buffer_1km.R")
 source("code/functions/pre_processing.R")
 
 ## Settings ####

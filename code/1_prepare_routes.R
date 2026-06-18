@@ -12,9 +12,9 @@ library(stringr)
 library(stringdist)
 library(lwgeom)
 
-here::i_am("code/0_1_prepare_route.R")
+here::i_am("code/1_prepare_route.R")
 
-# ---- helper: normalise route names ----
+# ---- function: normalise route names ----
 clean_str <- function(x) {
   x %>%
     enc2utf8() %>%
@@ -185,7 +185,7 @@ cat("Total matched:", nrow(result_routes), "points\n")
 result_routes_sf <- result_routes %>%
   left_join(lines_proj %>% select(line_id, geometry), by = "line_id") %>%
   st_as_sf()
-st_write(result_routes_sf, here::here("output", "result_routes"， "result_routes.shp"), delete_dsn = TRUE)
+st_write(result_routes_sf, here::here("output", "result_routes", "result_routes.shp"), delete_dsn = TRUE)
 
 # failures
 failure_ids <- setdiff(pts_proj$pt_id, all_matched_ids)

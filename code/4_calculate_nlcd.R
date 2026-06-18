@@ -11,7 +11,7 @@
 library(here)
 library(tidyverse)
 
-here::i_am("code/0_4_calculate_nlcd.R")
+here::i_am("code/4_calculate_nlcd.R")
 
 ## Settings ####
 product <- "LndCov"
@@ -22,11 +22,15 @@ years   <- 2011:2024
 # Examples:
 #   Grassland:  target_name <- "grassland";  target_values <- c(71)
 #   Developed:  target_name <- "developed";  target_values <- c(21, 22, 23, 24)
+#   Aridland:   target_name <- "aridland";   target_values <- c(31, 52)
 #   Forest:     target_name <- "forest";     target_values <- c(41, 42, 43)
 #   Cropland:   target_name <- "cropland";   target_values <- c(81, 82)
 
-target_name   <- "developed"
-target_values <- c(21, 22, 23, 24)
+# target_name   <- "developed"
+# target_values <- c(21, 22, 23, 24)
+target_name   <- "aridland"
+target_values <- c(31, 52)
+
 
 # ## test RDS ####
 # test_rds <- readRDS(here::here("output","routes_1km", "2024", "LndCov2024V1_14_30.rds"))

@@ -1,4 +1,4 @@
-# 0_3_prepare_nlcd_v1.R
+# 3_prepare_nlcd.R
 # Output the frequency table of the NLCD land cover pixels within a 1 km buffer
 # around each route line. Loops over years, one output file per route per year.
 # ---------------------------------------------------------------
@@ -9,7 +9,7 @@ library(terra)
 library(sf)
 library(tidyverse)
 
-here::i_am("code/0_3_prepare_nlcd_v1.R")
+here::i_am("code/3_prepare_nlcd.R")
 source("code/functions/pre_processing.R")
 
 ## Read 1-km buffers around routes and exclude Alaska ####
