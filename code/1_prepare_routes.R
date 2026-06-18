@@ -25,11 +25,10 @@
 #   result_failure.csv   - points that matched no line
 #
 # NOTE
-#   Geometry is projected to EPSG:3857 (Web Mercator) for distance and
-#   buffer operations. Web Mercator distorts distances away from the
-#   equator, so the 1 km / 40 km thresholds are approximate. For more
-#   accurate distances consider an equal-distance/equal-area CRS such
-#   as EPSG:5070 (used in 2_prepare_route_buffer_1km.R).
+#   Geometry is projected to EPSG:5070 (NAD83 / CONUS Albers, equal
+#   area) for distance and buffer operations, so the 1 km / 40 km
+#   thresholds are measured in true meters. This is consistent with
+#   the buffering CRS used in 2_prepare_route_buffer_1km.R.
 # ===============================================================
 
 library(here)
@@ -58,8 +57,8 @@ pts_df <- read_csv(here::here("data", "Routes_2025Release.csv"))
 pts <- st_as_sf(pts_df, coords = c("Longitude", "Latitude"), crs = 4326)
 pts <- st_transform(pts, st_crs(lines))
 
-lines_proj <- st_transform(lines, 3857)
-pts_proj   <- st_transform(pts, 3857)
+lines_proj <- st_transform(lines, 5070)
+pts_proj   <- st_transform(pts, 5070)
 
 pts_proj   <- pts_proj   %>% mutate(pt_id      = row_number(),
                                      name_clean = clean_str(RouteName))

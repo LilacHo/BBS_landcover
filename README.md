@@ -39,8 +39,8 @@ considers points still unmatched by the previous step.
   `output/result_1km.csv`, `output/result_routes.csv`,
   `output/result_routes/result_routes.shp`, `output/result_failure.csv`
 
-> Note: distance/buffer operations use EPSG:3857 (Web Mercator), which distorts
-> distances at higher latitudes, so the 1 km / 40 km thresholds are approximate.
+Distance/buffer operations use EPSG:5070 (NAD83 / CONUS Albers, equal area),
+so the 1 km / 40 km thresholds are measured in true meters.
 
 ### Step 2 — `2_prepare_route_buffer_1km.R`
 Buffers the matched route lines by 1 km (in EPSG:5070, equal area) and
