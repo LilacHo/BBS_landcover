@@ -1,8 +1,36 @@
-# Link BBS route points to route lines via a 3-step funnel.
-# Step 1: similar name (Jaro-Winkler >= 0.6) + within 1 km buffer
-# Step 2: exact same name + within 40 km of closer endpoint of line
-# Step 3: within 1 km buffer (any name)
-# One point → one line; one line → multiple points OK.
+# ===============================================================
+# 1_prepare_routes.R
+# ---------------------------------------------------------------
+# PURPOSE
+#   Match BBS route *points* (lat/long records) to BBS route *lines*
+#   (shapefile geometries) using a 3-step funnel. Each step works
+#   only on the points still unmatched by the previous step:
+#     Step 1: similar name (Jaro-Winkler >= 0.6) + within 1 km buffer
+#     Step 2: exact same (cleaned) name + within 40 km of the closer
+#             line endpoint
+#     Step 3: within 1 km buffer (any name) -> nearest line
+#   One point -> one line; one line -> may match multiple points.
+#
+# INPUT
+#   data/BBS_USA_Routes_WGS84/BBS_USA_Routes_WGS84.shp  (route lines)
+#   data/Routes_2025Release.csv                         (route points;
+#       must contain Longitude, Latitude, RouteName columns)
+#
+# OUTPUT (written to output/)
+#   result_perfect.csv   - Step 1 matches (similar name + 1 km)
+#   result_samename.csv  - Step 2 matches (exact name + 40 km endpoint)
+#   result_1km.csv       - Step 3 matches (nearest within 1 km)
+#   result_routes.csv    - combined matches (pt_id, line_id, match_step)
+#   result_routes/result_routes.shp - combined matches with line geometry
+#   result_failure.csv   - points that matched no line
+#
+# NOTE
+#   Geometry is projected to EPSG:3857 (Web Mercator) for distance and
+#   buffer operations. Web Mercator distorts distances away from the
+#   equator, so the 1 km / 40 km thresholds are approximate. For more
+#   accurate distances consider an equal-distance/equal-area CRS such
+#   as EPSG:5070 (used in 2_prepare_route_buffer_1km.R).
+# ===============================================================
 
 library(here)
 library(sf)
@@ -12,7 +40,7 @@ library(stringr)
 library(stringdist)
 library(lwgeom)
 
-here::i_am("code/1_prepare_route.R")
+here::i_am("code/1_prepare_routes.R")
 
 # ---- function: normalise route names ----
 clean_str <- function(x) {

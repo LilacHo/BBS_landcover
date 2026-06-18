@@ -1,6 +1,26 @@
+# ===============================================================
 # 3_prepare_nlcd.R
-# Output the frequency table of the NLCD land cover pixels within a 1 km buffer
-# around each route line. Loops over years, one output file per route per year.
+# ---------------------------------------------------------------
+# PURPOSE
+#   For each route buffer and each year, tabulate the frequency of
+#   NLCD land-cover classes among the raster pixels falling inside
+#   the 1-km buffer. Writes one .rds frequency table per route/year.
+#
+# INPUT
+#   data/buffer_1km/buffer_1km_proj.shp   (1-km buffers from step 2;
+#       must contain StateNum and Route columns)
+#   Annual NLCD rasters (.tif) for each year, located via
+#       input_nlcd_path(product, year, version). Years missing on
+#       disk are skipped.
+#
+# OUTPUT
+#   output/routes_1km/<year>/<product><year>V<version>_<StateNum>_<Route>.rds
+#       Each .rds holds a data.frame with columns:
+#         layer, value (NLCD code), class (label), count (pixel count)
+#
+# SETTINGS
+#   product / version / years control which rasters are processed.
+#   Alaska (StateNum == 3) is excluded.
 # ---------------------------------------------------------------
 
 
@@ -139,7 +159,10 @@ for (year in years) {
       cat("  Skipped", buffer_1km_proj$StateNum[i], "_", buffer_1km_proj$Route[i], ":", conditionMessage(e), "\n")
       NULL
     })
-    
+
+    # Skip saving when the buffer fell outside the raster (freq_table is NULL)
+    if (is.null(freq_table)) next
+
     freq_table2 <- freq_table %>%
       rename(class = value) %>%
       left_join(lut, by = "class") %>%

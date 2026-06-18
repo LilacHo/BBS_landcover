@@ -1,11 +1,31 @@
+# ===============================================================
 # 2_prepare_route_buffer_1km.R
-# Create 1-km buffers around the route lines.
-# Reproject the buffers to match the CRS of the NLCD product.
+# ---------------------------------------------------------------
+# PURPOSE
+#   Build 1-km buffer polygons around the matched route lines and
+#   reproject them to the CRS of the NLCD raster so they can be used
+#   to crop/mask the raster in step 3.
+#
+# INPUT
+#   output/result_routes/result_routes.shp  (matched route lines from
+#       1_prepare_routes.R; carries pt_id)
+#   data/Routes_2025Release.csv             (to attach StateNum, Route)
+#   One NLCD raster (.tif) located via input_nlcd_path(); only its CRS
+#       is used here. Path built from the product/version/year settings.
+#
+# OUTPUT
+#   data/buffer_1km/buffer_1km_proj.shp  (1-km buffers, in raster CRS,
+#       with StateNum and Route attributes)
+#
+# NOTE
+#   Buffering is done in EPSG:5070 (NAD83 / CONUS Albers, equal area)
+#   for accurate 1 km distances, then transformed to the raster CRS.
 # ---------------------------------------------------------------
 
 library(here)
 library(sf)
 library(tidyverse)
+library(terra)
 
 here::i_am("code/2_prepare_route_buffer_1km.R")
 source("code/functions/pre_processing.R")

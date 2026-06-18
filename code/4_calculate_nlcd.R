@@ -1,11 +1,25 @@
-# 0_4_calculate_nlcd.R
-# Proportion of target land cover within 1 km of each route;
-# Iterates over all years, producing individual yearly outputs 
-# and a final combined dataset.
+# ===============================================================
+# 4_calculate_nlcd.R
 # ---------------------------------------------------------------
-# To switch categories, edit the two settings below:
-#   target_name   – a short label used in output file/column names
-#   target_values – vector of NLCD pixel values to count
+# PURPOSE
+#   Compute, for each route and year, the proportion of pixels within
+#   the 1-km buffer that belong to a chosen land-cover category. Writes
+#   one CSV per year, then combines them into a single CSV.
+#
+# INPUT
+#   data/Routes_2025Release.csv   (route list; filtered to USA
+#       CountryNum == 840 and excluding Alaska StateNum == 3)
+#   output/routes_1km/<year>/<product><year>V<version>_<StateNum>_<Route>.rds
+#       (per-route frequency tables produced by 3_prepare_nlcd.R)
+#
+# OUTPUT
+#   output/<target_name>.csv  - all years row-bound into one file;
+#       route rows with a <target_name> column = target_pixels / total_pixels
+#
+# CONFIGURE THE TARGET CATEGORY
+#   Set `target_name` to one of the labels defined in `target_index`
+#   below. The matching NLCD pixel values are looked up automatically.
+#   To add a new category, add a row to `target_index`.
 # ---------------------------------------------------------------
 
 library(here)
@@ -18,18 +32,24 @@ product <- "LndCov"
 version <- 1
 years   <- 2011:2024
 
-# ---- TARGET CATEGORY (edit here to switch) ----
-# Examples:
-#   Grassland:  target_name <- "grassland";  target_values <- c(71)
-#   Developed:  target_name <- "developed";  target_values <- c(21, 22, 23, 24)
-#   Aridland:   target_name <- "aridland";   target_values <- c(31, 52)
-#   Forest:     target_name <- "forest";     target_values <- c(41, 42, 43)
-#   Cropland:   target_name <- "cropland";   target_values <- c(81, 82)
+# ---- TARGET CATEGORY INDEX (label -> NLCD pixel values) ----
+target_index <- tibble::tribble(
+  ~target_name,  ~target_values,
+  "developed",   c(21, 22, 23, 24),
+  "aridland",    c(31, 52),
+  "grassland",   c(71),
+  "forest",      c(41, 42, 43),
+  "cropland",    c(81, 82)
+)
 
-# target_name   <- "developed"
-# target_values <- c(21, 22, 23, 24)
-target_name   <- "aridland"
-target_values <- c(31, 52)
+# ---- Pick the category by name; values are assigned automatically ----
+target_name <- "aridland"
+
+if (!target_name %in% target_index$target_name) {
+  stop("Unknown target_name '", target_name, "'. Available: ",
+       paste(target_index$target_name, collapse = ", "))
+}
+target_values <- target_index$target_values[[which(target_index$target_name == target_name)]]
 
 
 # ## test RDS ####
@@ -46,10 +66,13 @@ Routes <- Routes %>%
 # year <- 2011 # Edit year
 
 ## Loop over years ####
-for (year in years) {
-  
+yearly_results <- vector("list", length(years))
+
+for (j in seq_along(years)) {
+
+  year <- years[j]
   cat("\n========== Year:", year, "==========\n")
-  
+
   route_expanded <- Routes %>%
     crossing(year = year) %>%
     mutate(!!target_name := NA_real_)
@@ -80,23 +103,12 @@ for (year in years) {
     
     route_expanded[[target_name]][i] <- target_proportion
   }
-  
-  output_file_fullname <- paste0(target_name, year, ".csv")
-  output_file_path <- here::here("output", target_name, output_file_fullname)
-  write.csv(route_expanded, output_file_path, row.names = FALSE)
+
+  yearly_results[[j]] <- route_expanded
 }
 
-## Combine####
-files <- list.files(
-  here::here("output", target_name),
-  pattern = "\\.csv$",
-  full.names = TRUE
-)
+## Combine and write single output ####
+combined_data <- bind_rows(yearly_results)
 
-combined_data <- files %>%
-  lapply(read_csv) %>%
-  bind_rows()
-
-output_combinedfile_fullname <- paste0(target_name, ".csv")
-output_combinedfile_path <- here::here("output", target_name, output_combinedfile_fullname)
+output_combinedfile_path <- here::here("output", paste0(target_name, ".csv"))
 write.csv(combined_data, output_combinedfile_path, row.names = FALSE)
