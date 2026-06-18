@@ -212,7 +212,9 @@ cat("Total matched:", nrow(result_routes), "points\n")
 result_routes_sf <- result_routes %>%
   left_join(lines_proj %>% select(line_id, geometry), by = "line_id") %>%
   st_as_sf()
-st_write(result_routes_sf, here::here("output", "result_routes", "result_routes.shp"), delete_dsn = TRUE)
+
+dir.create(here::here("output", "result_routes"), showWarnings = FALSE, recursive = TRUE)
+st_write(result_routes_sf, here::here("output", "result_routes", "result_routes.shp"))
 
 # failures
 failure_ids <- setdiff(pts_proj$pt_id, all_matched_ids)

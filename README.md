@@ -65,24 +65,29 @@ chosen land-cover category, and writes a single combined CSV.
 
 - **Input:** `data/Routes_2025Release.csv` (filtered to USA `CountryNum == 840`,
   excluding Alaska `StateNum == 3`), the `.rds` tables from Step 3
-- **Output:** `output/<target_name>.csv` (e.g. `output/aridland.csv`)
+- **Output:** `output/<target_name>.csv` (e.g. `output/aridlands.csv`)
 
-Select the target category by editing the settings near the top of the script:
+Select the target category by setting a single line near the top of the
+script. The pixel values are looked up automatically from the `target_index`
+table, so you only provide the name:
 
 ```r
-target_name   <- "aridland"
-target_values <- c(31, 52)
+target_name <- "aridlands"
 ```
 
-Common categories (NLCD pixel values):
+`target_name` must be one of the labels defined in `target_index`. Built-in
+categories (NLCD pixel values):
 
-| Category | `target_values` |
-|----------|-----------------|
-| Grassland | `c(71)` |
-| Developed | `c(21, 22, 23, 24)` |
-| Aridland | `c(31, 52)` |
-| Forest | `c(41, 42, 43)` |
-| Cropland | `c(81, 82)` |
+| `target_name` | `target_values` |
+|---------------|-----------------|
+| `grasslands` | `c(71)` |
+| `developed` | `c(21, 22, 23, 24)` |
+| `aridlands` | `c(31, 52)` |
+| `forests` | `c(41, 42, 43)` |
+| `croplands` | `c(81, 82)` |
+
+To add a new category, add a row to the `target_index` table in the script.
+If `target_name` is not found in the table, the script stops with an error.
 
 ## Data
 

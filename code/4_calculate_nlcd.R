@@ -36,14 +36,14 @@ years   <- 2011:2024
 target_index <- tibble::tribble(
   ~target_name,  ~target_values,
   "developed",   c(21, 22, 23, 24),
-  "aridland",    c(31, 52),
-  "grassland",   c(71),
+  "aridlands",    c(31, 52),
+  "grasslands",   c(71),
   "forest",      c(41, 42, 43),
   "cropland",    c(81, 82)
 )
 
 # ---- Pick the category by name; values are assigned automatically ----
-target_name <- "aridland"
+target_name <- "aridlands"
 
 if (!target_name %in% target_index$target_name) {
   stop("Unknown target_name '", target_name, "'. Available: ",
@@ -80,7 +80,11 @@ for (j in seq_along(years)) {
   for (i in 1:nrow(route_expanded)){
     
     product_file_name <- paste0(product, route_expanded$year[i], "V", version)
-    product_file_fullname <- paste0(product_file_name, "_", route_expanded$StateNum[i], "_", route_expanded$Route[i], ".rds")
+    # Coerce StateNum/Route to integers so leading zeros are stripped,
+    # matching the filenames written by 3_prepare_nlcd.R.
+    state_num <- as.integer(route_expanded$StateNum[i])
+    route_num <- as.integer(route_expanded$Route[i])
+    product_file_fullname <- paste0(product_file_name, "_", state_num, "_", route_num, ".rds")
     product_file_path <- here::here("output","routes_1km", route_expanded$year[i], product_file_fullname)
     
     # Skip if file doesn't exist

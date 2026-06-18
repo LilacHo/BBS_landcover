@@ -10,8 +10,9 @@
 #   data/buffer_1km/buffer_1km_proj.shp   (1-km buffers from step 2;
 #       must contain StateNum and Route columns)
 #   Annual NLCD rasters (.tif) for each year, located via
-#       input_nlcd_path(product, year, version). Years missing on
-#       disk are skipped.
+#       input_nlcd_path(product, year, version). 
+#   Version 1 denotes the Annual NLCD Conterminous U.S. (CU) Collection 
+#       Version 1 (1.1).
 #
 # OUTPUT
 #   output/routes_1km/<year>/<product><year>V<version>_<StateNum>_<Route>.rds
@@ -156,7 +157,8 @@ for (year in years) {
       lc_masked  <- mask(lc_cropped, buf_vect)
       freq(lc_masked)
     }, error = function(e) {
-      cat("  Skipped", buffer_1km_proj$StateNum[i], "_", buffer_1km_proj$Route[i], ":", conditionMessage(e), "\n")
+      cat("  Skipped ", as.integer(buffer_1km_proj$StateNum[i]), "-",
+          as.integer(buffer_1km_proj$Route[i]), ": ", conditionMessage(e), "\n", sep = "")
       NULL
     })
 
@@ -169,8 +171,12 @@ for (year in years) {
       select(layer, value, class, count)
     
     
-    # Save full frequency table per route
-    rds_name <- paste0(input_file_name, "_", buffer_1km_proj$StateNum[i], "_", buffer_1km_proj$Route[i], ".rds")
+    # Save full frequency table per route.
+    # Coerce StateNum/Route to integers so leading zeros (e.g. "02", "001")
+    # are stripped, keeping filenames consistent with 4_calculate_nlcd.R.
+    state_num <- as.integer(buffer_1km_proj$StateNum[i])
+    route_num <- as.integer(buffer_1km_proj$Route[i])
+    rds_name <- paste0(input_file_name, "_", state_num, "_", route_num, ".rds")
     saveRDS(freq_table2, here::here("output", "routes_1km", year, rds_name))
   
   }

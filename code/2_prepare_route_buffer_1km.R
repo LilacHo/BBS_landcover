@@ -72,6 +72,7 @@ buffer_1km_proj <- st_transform(
   crs = crs(nlcd)
 )
 
+dir.create(here::here("data", "buffer_1km"), showWarnings = FALSE, recursive = TRUE)
 st_write(buffer_1km_proj, 
          here::here("data", "buffer_1km", "buffer_1km_proj.shp"))
 
