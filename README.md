@@ -10,6 +10,8 @@ geometries, buffers each line by 1 km, tabulates NLCD pixels inside each
 buffer per year, and finally summarises the proportion of a chosen land-cover
 category per route per year.
 
+![CONUS land-cover map, 2025](docs/CONUS_2025_Map_final.png)
+
 ## Pipeline
 
 Run the scripts in `code/` in order. Each one consumes the output of the
@@ -24,6 +26,14 @@ previous step.
 
 `code/functions/pre_processing.R` holds helper functions that build the file
 paths to the NLCD rasters.
+
+`code/archive/` holds exploratory analyses and earlier prototype scripts that
+are **not** part of the numbered pipeline, kept for reference:
+
+- `1_compare_crs_3857_vs_5070.R` — compares point-to-line matching under
+  EPSG:3857 vs EPSG:5070.
+- `3_SinglePoint_v0.R`, `3_SinglePoint_v1.R`, `3_SinglePoint_v2.R` — earlier
+  single-point prototypes of the buffer/tabulation step.
 
 ### Step 1 — `1_prepare_routes.R`
 Matches each route point to a route line using a 3-step funnel; each step only
@@ -88,6 +98,10 @@ categories (NLCD pixel values):
 
 To add a new category, add a row to the `target_index` table in the script.
 If `target_name` is not found in the table, the script stops with an error.
+
+The pixel values above follow the NLCD land-cover legend:
+
+![Annual NLCD land-cover legend](docs/Annual_NLCD_Land_Cover_Legend.jpg)
 
 ## Data
 

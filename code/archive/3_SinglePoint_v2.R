@@ -3,27 +3,27 @@ library(terra) #raster data
 library(sf)
 library(tidyverse)
 
-here::i_am("code/3_SinglePoint_v1.R")
+here::i_am("code/archive/3_SinglePoint_v2.R")
 source("code/functions/pre_processing.R")
 
 ## input_file_path ####
 product <- "LndCov"
-year <- 2024
-version <- 1
+year <- 2025
+version <- 2
 # 
 # if (input_file_path != "") {
 #   input_file_path <- ""
 # }
 
-# LndChg2023 <- rast(here("data","Annual_NLCD_LndChg_2023_CU_C1V1", "Annual_NLCD_LndChg_2023_CU_C1V1.tif"))
-input_file_path <- input_nlcd_path(product, year, version) #eg: ("LndChg", 2023, 0)
+# LndChg2023 <- rast(here("data","Annual_NLCD_LndChg_2025_CU_C1V2", "Annual_NLCD_LndChg_2025_CU_C1V2.tif"))
+input_file_path <- input_nlcd_path(product, year, version) #eg: ("LndChg", 2025, 2)
 # input_file_path <- input_file_path_server(product, year, version)
 
 # print(input_file_path)
 if(file.exists(input_file_path)){
-  input_file_name <- paste0(product, year, "V", version) # eg: LndChg2023V0
+  input_file_name <- paste0(product, year, "V", version) # eg: LndChg2025V2
   # automatically assign the raster to a changeable variable name
-  # assign(input_file_name, rast(input_file_path)) # equivalent to: LndChg2023V0 <- rast(input_file_path)
+  # assign(input_file_name, rast(input_file_path)) # equivalent to: LndChg2025V2 <- rast(input_file_path)
   nlcd <- rast(input_file_path)
 } else{
   print(paste0(product, year,"V", version, " is not available"))
@@ -35,8 +35,8 @@ Routes <- read.csv(here::here("data","Routes_2025Release.csv"), header = TRUE)
 
 # Exclude routes outside of USA and Alaska
 Routes_doable <- Routes %>%
-  filter(CountryNum == 840) %>%
-  filter(StateNum != 3)
+  filter(CountryNum == 840) #%>%
+  #filter(StateNum != 3)
 
 # Add attributes
 lut <- data.frame(
@@ -79,17 +79,17 @@ point_sf <- st_sf(
 # Transform to a projected CRS for meters
 point_proj <- st_transform(point_sf, 32616) # cautious: high accuracy for a small region
 
-# Buffer: 30 km = 30,000 meters
-buffer_30km <- st_buffer(point_proj, dist = 30000)
+# Buffer: 1 km = 1,000 meters
+buffer_1km <- st_buffer(point_proj, dist = 1000)
 
 # Transform to the raster crs
-buffer_30km_proj <- st_transform(
-  buffer_30km,
+buffer_1km_proj <- st_transform(
+  buffer_1km,
   crs = crs(nlcd)
 )
 
 # Convert sf object to SpatVector for terra
-buffer_vect <- vect(buffer_30km_proj)
+buffer_vect <- vect(buffer_1km_proj)
 
 # # Crop raster to polygon extent (fast, rectangular)
 lc_cropped <- crop(nlcd, buffer_vect)

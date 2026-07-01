@@ -32,7 +32,7 @@ library(stringr)
 library(stringdist)
 library(lwgeom)
 
-here::i_am("code/compare_crs_3857_vs_5070.R")
+here::i_am("code/archive/1_compare_crs_3857_vs_5070.R")
 
 clean_str <- function(x) {
   x %>%
