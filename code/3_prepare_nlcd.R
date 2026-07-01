@@ -11,8 +11,8 @@
 #       must contain StateNum and Route columns)
 #   Annual NLCD rasters (.tif) for each year, located via
 #       input_nlcd_path(product, year, version). 
-#   Version 1 denotes the Annual NLCD Conterminous U.S. (CU) Collection 
-#       Version 1 (1.1).
+#   Version 2 denotes the Annual NLCD Conterminous U.S. (CU) Collection 
+#       Version 2 (1.2).
 #
 # OUTPUT
 #   output/routes_1km/<year>/<product><year>V<version>_<StateNum>_<Route>.rds
@@ -21,7 +21,6 @@
 #
 # SETTINGS
 #   product / version / years control which rasters are processed.
-#   Alaska (StateNum == 3) is excluded.
 # ---------------------------------------------------------------
 
 
@@ -35,13 +34,12 @@ source("code/functions/pre_processing.R")
 
 ## Read 1-km buffers around routes and exclude Alaska ####
 buffer_1km_proj <- st_read(here::here("data", "buffer_1km", "buffer_1km_proj.shp"))
-buffer_1km_proj <- buffer_1km_proj %>%
-  filter(StateNum != 3)
+buffer_1km_proj <- buffer_1km_proj 
 
 ## Settings ####
 product <- "LndCov"
-version <- 1
-years   <- 2010:2024  
+version <- 2
+years   <- 2010:2025  
 
 
 # NLCD land cover lookup

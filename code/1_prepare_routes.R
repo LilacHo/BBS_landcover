@@ -52,7 +52,7 @@ clean_str <- function(x) {
 
 # ---- read data ----
 lines <- st_read(here::here("data", "BBS_USA_Routes_WGS84", "BBS_USA_Routes_WGS84.shp"))
-pts_df <- read_csv(here::here("data", "Routes_2025Release.csv"))
+pts_df <- read_csv(here::here("data", "Routes_2026Release.csv"))
 
 pts <- st_as_sf(pts_df, coords = c("Longitude", "Latitude"), crs = 4326)
 pts <- st_transform(pts, st_crs(lines))

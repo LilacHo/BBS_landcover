@@ -29,8 +29,8 @@ here::i_am("code/4_calculate_nlcd.R")
 
 ## Settings ####
 product <- "LndCov"
-version <- 1
-years   <- 2011:2024
+version <- 2
+years   <- 2011:2025
 
 # ---- TARGET CATEGORY INDEX (label -> NLCD pixel values) ----
 target_index <- tibble::tribble(
@@ -56,7 +56,7 @@ target_values <- target_index$target_values[[which(target_index$target_name == t
 # test_rds <- readRDS(here::here("output","routes_1km", "2024", "LndCov2024V1_14_30.rds"))
 
 ## Routes ####
-Routes <- read.csv(here::here("data","Routes_2025Release.csv"), header = TRUE)
+Routes <- read.csv(here::here("data","Routes_2026Release.csv"), header = TRUE)
 
 Routes <- Routes %>%
   filter(CountryNum == 840) %>%

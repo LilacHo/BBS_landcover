@@ -9,7 +9,7 @@
 # INPUT
 #   output/result_routes/result_routes.shp  (matched route lines from
 #       1_prepare_routes.R; carries pt_id)
-#   data/Routes_2025Release.csv             (to attach StateNum, Route)
+#   data/Routes_2026Release.csv             (to attach StateNum, Route)
 #   One NLCD raster (.tif) located via input_nlcd_path(); only its CRS
 #       is used here. Path built from the product/version/year settings.
 #
@@ -32,8 +32,8 @@ source("code/functions/pre_processing.R")
 
 ## Settings ####
 product <- "LndCov"
-version <- 1
-year <- 2024 
+version <- 2
+year <- 2025 
 
 ## Input NLCD raster ####
 input_file_path <- input_nlcd_path(product, year, version)
@@ -50,7 +50,7 @@ nlcd <- rast(input_file_path)
 lines <- st_read(here::here("output", "result_routes", "result_routes.shp"))
 
 # Join StateNum and Route from the original points CSV via pt_id
-pts_df <- read_csv(here::here("data", "Routes_2025Release.csv"))
+pts_df <- read_csv(here::here("data", "Routes_2026Release.csv"))
 pts_df <- pts_df %>% mutate(pt_id = row_number())
 lines <- lines %>%
   left_join(pts_df %>% 
