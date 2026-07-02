@@ -2,33 +2,38 @@
 # 1_prepare_routes.R
 # ---------------------------------------------------------------
 # PURPOSE
-#   Match BBS route *points* (lat/long records) to BBS route *lines*
-#   (shapefile geometries) using a 3-step funnel. Each step works
-#   only on the points still unmatched by the previous step:
-#     Step 1: similar name (Jaro-Winkler >= 0.6) + within 1 km buffer
-#     Step 2: exact same (cleaned) name + within 40 km of the closer
-#             line endpoint
-#     Step 3: within 1 km buffer (any name) -> nearest line
-#   One point -> one line; one line -> may match multiple points.
+#   (1) Match BBS route *points* (lat/long records) to BBS route *lines*
+#       (shapefile geometries) using a 3-step funnel. Each step works
+#       only on the points still unmatched by the previous step:
+#         Step 1: similar name (Jaro-Winkler >= 0.6) + within 1 km buffer
+#         Step 2: exact same (cleaned) name + within 40 km of the closer
+#                 line endpoint
+#         Step 3: within 1 km buffer (any name) -> nearest line
+#       One point -> one line; one line -> may match multiple points.
+#   (2) Build 1-km buffer polygons around the matched route lines for
+#       use in the NLCD tabulation step.
 #
 # INPUT
 #   data/BBS_USA_Routes_WGS84/BBS_USA_Routes_WGS84.shp  (route lines)
-#   data/Routes_2025Release.csv                         (route points;
-#       must contain Longitude, Latitude, RouteName columns)
+#   data/Routes_2026Release.csv                         (route points;
+#       must contain Longitude, Latitude, RouteName, StateNum, Route)
 #
-# OUTPUT (written to output/)
-#   result_perfect.csv   - Step 1 matches (similar name + 1 km)
-#   result_samename.csv  - Step 2 matches (exact name + 40 km endpoint)
-#   result_1km.csv       - Step 3 matches (nearest within 1 km)
-#   result_routes.csv    - combined matches (pt_id, line_id, match_step)
-#   result_routes/result_routes.shp - combined matches with line geometry
-#   result_failure.csv   - points that matched no line
+# OUTPUT (written to output/ and data/)
+#   output/result_perfect.csv   - Step 1 matches (similar name + 1 km)
+#   output/result_samename.csv  - Step 2 matches (exact name + 40 km endpoint)
+#   output/result_1km.csv       - Step 3 matches (nearest within 1 km)
+#   output/result_routes.csv    - combined matches (pt_id, line_id, match_step)
+#   output/result_routes/result_routes.shp - combined matches with geometry
+#   output/result_failure.csv   - points that matched no line
+#   data/buffer_1km/buffer_1km.shp - 1-km buffers around matched lines
+#       (in EPSG:5070; carries StateNum and Route attributes)
 #
 # NOTE
-#   Geometry is projected to EPSG:5070 (NAD83 / CONUS Albers, equal
+#   All geometry is projected to EPSG:5070 (NAD83 / CONUS Albers, equal
 #   area) for distance and buffer operations, so the 1 km / 40 km
-#   thresholds are measured in true meters. This is consistent with
-#   the buffering CRS used in 2_prepare_route_buffer_1km.R.
+#   thresholds are measured in true meters. The buffers are left in
+#   EPSG:5070; step 2 (2_prepare_nlcd.R) reprojects each buffer to the
+#   NLCD raster CRS on the fly, so no raster is needed here.
 # ===============================================================
 
 library(here)
@@ -191,7 +196,7 @@ if (nrow(pts_remaining3) > 0) {
 # ============================================================
 # COMBINED RESULTS + FAILURES
 # ============================================================
-cat("\n=== Final output ===\n")
+cat("\n=== Combining matches ===\n")
 
 all_matched_ids <- c(step1$pt_id, step2_ids, step3_ids)
 
@@ -214,7 +219,8 @@ result_routes_sf <- result_routes %>%
   st_as_sf()
 
 dir.create(here::here("output", "result_routes"), showWarnings = FALSE, recursive = TRUE)
-st_write(result_routes_sf, here::here("output", "result_routes", "result_routes.shp"))
+st_write(result_routes_sf, here::here("output", "result_routes", "result_routes.shp"),
+         append = FALSE)
 
 # failures
 failure_ids <- setdiff(pts_proj$pt_id, all_matched_ids)
@@ -222,4 +228,23 @@ result_failure <- pts_proj %>% filter(pt_id %in% failure_ids) %>% st_drop_geomet
 write.csv(result_failure, here::here("output", "result_failure.csv"), row.names = FALSE)
 cat("Unmatched:", nrow(result_failure), "points\n")
 
-cat("Done.\n")
+# ============================================================
+# BUILD 1-KM BUFFERS AROUND MATCHED LINES
+# ============================================================
+cat("\n=== Building 1 km buffers ===\n")
+
+# Attach StateNum / Route (needed downstream for per-route filenames)
+buffer_input <- result_routes_sf %>%
+  left_join(st_drop_geometry(pts_proj) %>% select(pt_id, StateNum, Route),
+            by = "pt_id")
+
+# Buffer in EPSG:5070 (equal area) so 1 km is measured in true meters.
+# Left in EPSG:5070; step 2 reprojects each buffer to the NLCD raster CRS.
+buffer_1km <- st_buffer(buffer_input, dist = 1000)
+
+dir.create(here::here("data", "buffer_1km"), showWarnings = FALSE, recursive = TRUE)
+st_write(buffer_1km, here::here("data", "buffer_1km", "buffer_1km_proj.shp"),
+         append = FALSE)
+cat("Buffers written:", nrow(buffer_1km), "\n")
+
+cat("\nDone.\n")

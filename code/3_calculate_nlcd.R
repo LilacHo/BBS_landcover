@@ -1,5 +1,5 @@
 # ===============================================================
-# 4_calculate_nlcd.R
+# 3_calculate_nlcd.R
 # ---------------------------------------------------------------
 # PURPOSE
 #   Compute, for each route and year, the proportion of pixels within
@@ -10,7 +10,7 @@
 #   data/Routes_2025Release.csv   (route list; filtered to USA
 #       CountryNum == 840 and excluding Alaska StateNum == 3)
 #   output/routes_1km/<year>/<product><year>V<version>_<StateNum>_<Route>.rds
-#       (per-route frequency tables produced by 3_prepare_nlcd.R)
+#       (per-route frequency tables produced by 2_prepare_nlcd.R)
 #
 # OUTPUT
 #   output/<target_name>.csv  - all years row-bound into one file;
@@ -25,7 +25,7 @@
 library(here)
 library(tidyverse)
 
-here::i_am("code/4_calculate_nlcd.R")
+here::i_am("code/3_calculate_nlcd.R")
 
 ## Settings ####
 product <- "LndCov"
@@ -38,8 +38,8 @@ target_index <- tibble::tribble(
   "developed",   c(21, 22, 23, 24),
   "aridlands",    c(31, 52),
   "grasslands",   c(71),
-  "forest",      c(41, 42, 43),
-  "cropland",    c(81, 82)
+  "forests",     c(41, 42, 43),
+  "croplands",   c(81, 82)
 )
 
 # ---- Pick the category by name; values are assigned automatically ----

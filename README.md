@@ -15,14 +15,14 @@ category per route per year.
 ## Pipeline
 
 Run the scripts in `code/` in order. Each one consumes the output of the
-previous step.
+previous step. To run the whole pipeline at once, use `code/run_all.R`
+(see [Running the pipeline](#running-the-pipeline)).
 
 | Step | Script | Purpose |
 |------|--------|---------|
-| 1 | `1_prepare_routes.R` | Match BBS route points to route lines (3-step funnel) |
-| 2 | `2_prepare_route_buffer_1km.R` | Build 1-km buffers around matched lines, reprojected to the NLCD CRS |
-| 3 | `3_prepare_nlcd.R` | Tabulate NLCD pixel frequencies inside each buffer, per year |
-| 4 | `4_calculate_nlcd.R` | Compute the proportion of a target land-cover category per route/year |
+| 1 | `1_prepare_routes.R` | Match BBS route points to route lines (3-step funnel) and build 1-km buffers |
+| 2 | `2_prepare_nlcd.R` | Tabulate NLCD pixel frequencies inside each buffer, per year |
+| 3 | `3_calculate_nlcd.R` | Compute the proportion of a target land-cover category per route/year |
 
 `code/functions/pre_processing.R` holds helper functions that build the file
 paths to the NLCD rasters.
@@ -43,38 +43,36 @@ considers points still unmatched by the previous step.
 2. Exact (cleaned) name **and** within 40 km of the closer line endpoint.
 3. Nearest line within a 1 km buffer (any name).
 
+Then buffers each matched route line by 1 km (also in EPSG:5070) to produce the
+buffers used in Step 2.
+
 - **Input:** `data/BBS_USA_Routes_WGS84/BBS_USA_Routes_WGS84.shp`,
-  `data/Routes_2025Release.csv`
+  `data/Routes_2026Release.csv`
 - **Output:** `output/result_perfect.csv`, `output/result_samename.csv`,
   `output/result_1km.csv`, `output/result_routes.csv`,
-  `output/result_routes/result_routes.shp`, `output/result_failure.csv`
+  `output/result_routes/result_routes.shp`, `output/result_failure.csv`,
+  `data/buffer_1km/buffer_1km_proj.shp`
 
 Distance/buffer operations use EPSG:5070 (NAD83 / CONUS Albers, equal area),
-so the 1 km / 40 km thresholds are measured in true meters.
+so the 1 km / 40 km thresholds are measured in true meters. The buffers are
+left in EPSG:5070; Step 2 reprojects each buffer to the NLCD raster CRS on the
+fly, so no raster is needed in this step.
 
-### Step 2 — `2_prepare_route_buffer_1km.R`
-Buffers the matched route lines by 1 km (in EPSG:5070, equal area) and
-reprojects the buffers to the NLCD raster CRS.
+### Step 2 — `2_prepare_nlcd.R`
+For each buffer and each year, reprojects the buffer to the NLCD raster CRS,
+crops/masks the raster to the buffer, and records a frequency table of
+land-cover classes.
 
-- **Input:** `output/result_routes/result_routes.shp`,
-  `data/Routes_2025Release.csv`, one NLCD raster (for its CRS)
-- **Output:** `data/buffer_1km/buffer_1km_proj.shp`
-
-### Step 3 — `3_prepare_nlcd.R`
-For each buffer and each year, crops/masks the NLCD raster to the buffer and
-records a frequency table of land-cover classes. Alaska (`StateNum == 3`) is
-excluded.
-
-- **Input:** `data/buffer_1km/buffer_1km_proj.shp`, annual NLCD rasters
+- **Input:** `data/buffer_1km/buffer_1km.shp`, annual NLCD rasters
 - **Output:** `output/routes_1km/<year>/<product><year>V<version>_<StateNum>_<Route>.rds`
   (columns: `layer`, `value`, `class`, `count`)
 
-### Step 4 — `4_calculate_nlcd.R`
+### Step 3 — `3_calculate_nlcd.R`
 Computes, per route and year, the proportion of buffer pixels belonging to a
 chosen land-cover category, and writes a single combined CSV.
 
-- **Input:** `data/Routes_2025Release.csv` (filtered to USA `CountryNum == 840`,
-  excluding Alaska `StateNum == 3`), the `.rds` tables from Step 3
+- **Input:** `data/Routes_2026Release.csv` (filtered to USA `CountryNum == 840`,
+  excluding Alaska `StateNum == 3`), the `.rds` tables from Step 2
 - **Output:** `output/<target_name>.csv` (e.g. `output/aridlands.csv`)
 
 Select the target category by setting a single line near the top of the
@@ -105,7 +103,7 @@ The pixel values above follow the NLCD land-cover legend:
 
 ## Data
 
-- `data/Routes_2025Release.csv` — BBS route records. Columns include
+- `data/Routes_2026Release.csv` — BBS route records. Columns include
   `CountryNum`, `StateNum`, `Route`, `RouteName`, `Active`, `Latitude`,
   `Longitude`, `Stratum`, `BCR`, `RouteTypeID`, `RouteTypeDetailID`.
 - `data/BBS_USA_Routes_WGS84/` — BBS route line shapefile (WGS84).

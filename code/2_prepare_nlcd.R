@@ -1,5 +1,5 @@
 # ===============================================================
-# 3_prepare_nlcd.R
+# 2_prepare_nlcd.R
 # ---------------------------------------------------------------
 # PURPOSE
 #   For each route buffer and each year, tabulate the frequency of
@@ -7,8 +7,8 @@
 #   the 1-km buffer. Writes one .rds frequency table per route/year.
 #
 # INPUT
-#   data/buffer_1km/buffer_1km_proj.shp   (1-km buffers from step 2;
-#       must contain StateNum and Route columns)
+#   data/buffer_1km/buffer_1km.shp   (1-km buffers from step 1, in
+#       EPSG:5070; must contain StateNum and Route columns)
 #   Annual NLCD rasters (.tif) for each year, located via
 #       input_nlcd_path(product, year, version). 
 #   Version 2 denotes the Annual NLCD Conterminous U.S. (CU) Collection 
@@ -29,12 +29,12 @@ library(terra)
 library(sf)
 library(tidyverse)
 
-here::i_am("code/3_prepare_nlcd.R")
+here::i_am("code/2_prepare_nlcd.R")
 source("code/functions/pre_processing.R")
 
-## Read 1-km buffers around routes and exclude Alaska ####
-buffer_1km_proj <- st_read(here::here("data", "buffer_1km", "buffer_1km_proj.shp"))
-buffer_1km_proj <- buffer_1km_proj 
+## Read 1-km buffers around routes ####
+# Buffers are in EPSG:5070; each is reprojected to the raster CRS below.
+buffer_1km_proj <- st_read(here::here("data", "buffer_1km", "buffer_1km.shp"))
 
 ## Settings ####
 product <- "LndCov"
