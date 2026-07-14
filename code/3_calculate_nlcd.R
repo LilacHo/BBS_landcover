@@ -30,7 +30,7 @@ here::i_am("code/3_calculate_nlcd.R")
 ## Settings ####
 product <- "LndCov"
 version <- 2
-years   <- 2011:2025
+years   <- 2010:2025
 
 # ---- TARGET CATEGORY INDEX (label -> NLCD pixel values) ----
 target_index <- tibble::tribble(
@@ -43,7 +43,7 @@ target_index <- tibble::tribble(
 )
 
 # ---- Pick the category by name; values are assigned automatically ----
-target_name <- "aridlands"
+target_name <- "grasslands"
 
 if (!target_name %in% target_index$target_name) {
   stop("Unknown target_name '", target_name, "'. Available: ",
