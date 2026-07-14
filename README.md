@@ -27,6 +27,12 @@ previous step. To run the whole pipeline at once, use `code/run_all.R`
 `code/functions/pre_processing.R` holds helper functions that build the file
 paths to the NLCD rasters.
 
+`code/support/` holds diagnostic scripts that are not part of the numbered
+pipeline but operate on its outputs:
+
+- `4_check_collinearity.R` — checks collinearity between two land-cover
+  proportion outputs from Step 3 (see [below](#support-script--4_check_collinearityr)).
+
 `code/archive/` holds exploratory analyses and earlier prototype scripts that
 are **not** part of the numbered pipeline, kept for reference:
 
@@ -93,6 +99,7 @@ categories (NLCD pixel values):
 | `aridlands` | `c(31, 52)` |
 | `forests` | `c(41, 42, 43)` |
 | `croplands` | `c(81, 82)` |
+| `Anthro` | `c(21, 22, 23, 24, 81, 82)` (developed + croplands) |
 
 To add a new category, add a row to the `target_index` table in the script.
 If `target_name` is not found in the table, the script stops with an error.
@@ -100,6 +107,29 @@ If `target_name` is not found in the table, the script stops with an error.
 The pixel values above follow the NLCD land-cover legend:
 
 ![Annual NLCD land-cover legend](docs/Annual_NLCD_Land_Cover_Legend.jpg)
+
+### Support script — `4_check_collinearity.R`
+Checks collinearity between any two of the per-category CSVs produced by
+Step 3 (generically referred to as `LndCov1` and `LndCov2` in the script).
+Joins the two files on route/year, then reports the Pearson correlation and
+variance inflation factor (`1/(1-r^2)`), both overall and broken down by year.
+
+- **Input:** `output/<LndCov1_name>.csv`, `output/<LndCov2_name>.csv`
+- **Output:** console summary only (a scatter-plot block is included in the
+  script but currently commented out)
+
+Select the two categories to compare by setting two lines near the top of the
+script:
+
+```r
+LndCov1_name <- "developed"
+LndCov2_name <- "grasslands"
+```
+
+Either name must match an existing `output/<name>.csv` file written by Step 3
+(e.g. any of `developed`, `grasslands`, `aridlands`, `forests`, `croplands`).
+As a rule of thumb, `|r| > 0.7` (VIF > ~2) is often flagged as a collinearity
+concern.
 
 ## Data
 

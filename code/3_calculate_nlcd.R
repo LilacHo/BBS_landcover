@@ -36,10 +36,11 @@ years   <- 2010:2025
 target_index <- tibble::tribble(
   ~target_name,  ~target_values,
   "developed",   c(21, 22, 23, 24),
-  "aridlands",    c(31, 52),
-  "grasslands",   c(71),
+  "aridlands",   c(31, 52),
+  "grasslands",  c(71),
   "forests",     c(41, 42, 43),
-  "croplands",   c(81, 82)
+  "croplands",   c(81, 82),
+  "Anthro",      c(21, 22, 23, 24, 81, 82)
 )
 
 # ---- Pick the category by name; values are assigned automatically ----
