@@ -28,7 +28,7 @@ library(tidyverse)
 here::i_am("code/3_calculate_nlcd.R")
 
 ## Settings ####
-product <- "LndCov"
+product <- "LndCov" # "LndCov" or "LndChg"
 version <- 2
 years   <- 2010:2025
 
@@ -40,7 +40,9 @@ target_index <- tibble::tribble(
   "grasslands",  c(71),
   "forests",     c(41, 42, 43),
   "croplands",   c(81, 82),
-  "Anthro",      c(21, 22, 23, 24, 81, 82)
+  "Anthro",      c(21, 22, 23, 24, 81, 82),
+  # LndChg code
+  "grasslands to Anthro", c(7121, 7122, 7123, 7124, 7181, 7182)
 )
 
 # ---- Pick the category by name; values are assigned automatically ----

@@ -66,12 +66,46 @@ fly, so no raster is needed in this step.
 
 ### Step 2 — `2_prepare_nlcd.R`
 For each buffer and each year, reprojects the buffer to the NLCD raster CRS,
-crops/masks the raster to the buffer, and records a frequency table of
-land-cover classes.
+crops/masks the raster to the buffer, and records a frequency table of pixel
+classes. Supports both Annual NLCD products via the `product` setting near the
+top of the script:
 
-- **Input:** `data/buffer_1km/buffer_1km.shp`, annual NLCD rasters
+```r
+product <- "LndCov"   # "LndCov" or "LndChg"
+```
+
+- `LndCov` — **Land Cover**: the 16 base NLCD classes (values `11`-`95`; see the
+  table in [Step 3](#step-3--3_calculate_nlcdr)).
+- `LndChg` — **Land Cover Change**: the same 16 "no change" values, plus AABB
+  change codes (a concatenation of the previous class `AA` and current class
+  `BB`). The full AABB lookup table is generated automatically from the 16
+  base classes, so it never needs to be typed out by hand.
+
+- **Input:** `data/buffer_1km/buffer_1km_proj.shp`, annual NLCD rasters
 - **Output:** `output/routes_1km/<year>/<product><year>V<version>_<StateNum>_<Route>.rds`
   (columns: `layer`, `value`, `class`, `count`)
+
+A standalone `code/2_prepare_nlcd_LndChg.R` is also kept alongside it — it
+hardcodes `product <- "LndChg"` and its full 256-row lookup table, for running
+the change product on its own without touching the `product` setting above.
+
+#### Land Cover Change codes (AABB)
+The `LndChg` product encodes each pixel as follows:
+
+| Value | Meaning |
+|-------|---------|
+| `11`-`95` | Pixels with no change retain their NLCD class value |
+| `AABB` | Change is shown by a concatenation of the previous (`AA`) and current (`BB`) class values |
+
+Examples:
+
+| Code | Meaning |
+|------|---------|
+| `9590` | Emergent Herbaceous Wetlands → Woody Wetlands |
+| `7182` | Grassland/Herbaceous → Cultivated Crops |
+| `8123` | Pasture/Hay → Developed, Medium Intensity |
+
+![Land Cover Change legend](docs/LndCvr_Chg_Legend.png)
 
 ### Step 3 — `3_calculate_nlcd.R`
 Computes, per route and year, the proportion of buffer pixels belonging to a

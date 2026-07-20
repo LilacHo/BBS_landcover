@@ -3,15 +3,24 @@
 # ---------------------------------------------------------------
 # PURPOSE
 #   For each route buffer and each year, tabulate the frequency of
-#   NLCD land-cover classes among the raster pixels falling inside
-#   the 1-km buffer. Writes one .rds frequency table per route/year.
+#   NLCD pixel classes among the raster pixels falling inside the
+#   1-km buffer. Writes one .rds frequency table per route/year.
+#
+#   Handles both Annual NLCD products via the `product` setting:
+#     "LndCov" - Land Cover (16 classes, values 11-95)
+#     "LndChg" - Land Cover Change (same 16 "no change" values,
+#                plus AABB codes = previous class + current class,
+#                e.g. 7182 = Grassland/Herbaceous (71) to
+#                Cultivated Crops (82)). The AABB lookup table is
+#                built automatically from the base 16-class table
+#                below, so it never needs to be typed out by hand.
 #
 # INPUT
-#   data/buffer_1km/buffer_1km.shp   (1-km buffers from step 1, in
+#   data/buffer_1km/buffer_1km_proj.shp   (1-km buffers from step 1, in
 #       EPSG:5070; must contain StateNum and Route columns)
 #   Annual NLCD rasters (.tif) for each year, located via
-#       input_nlcd_path(product, year, version). 
-#   Version 2 denotes the Annual NLCD Conterminous U.S. (CU) Collection 
+#       input_nlcd_path(product, year, version).
+#   Version 2 denotes the Annual NLCD Conterminous U.S. (CU) Collection
 #       Version 2 (1.2).
 #
 # OUTPUT
@@ -21,6 +30,7 @@
 #
 # SETTINGS
 #   product / version / years control which rasters are processed.
+#   Set product to "LndCov" or "LndChg".
 # ---------------------------------------------------------------
 
 
@@ -34,16 +44,17 @@ source("code/functions/pre_processing.R")
 
 ## Read 1-km buffers around routes ####
 # Buffers are in EPSG:5070; each is reprojected to the raster CRS below.
-buffer_1km_proj <- st_read(here::here("data", "buffer_1km", "buffer_1km.shp"))
+buffer_1km_proj <- st_read(here::here("data", "buffer_1km", "buffer_1km_proj.shp"))
 
 ## Settings ####
-product <- "LndCov"
+product <- "LndCov"   # "LndCov" or "LndChg"
 version <- 2
-years   <- 2010:2025  
+years   <- 2010:2025
 
 
-# NLCD land cover lookup
-lut <- data.frame(
+# Base NLCD land cover classes. Used directly as the lookup table for
+# "LndCov"; also the building blocks for "LndChg"'s AABB change codes below.
+lut_base <- data.frame(
   value = c(11, 12, 21, 22, 23, 24, 31, 41, 42, 43, 52, 71, 81, 82, 90, 95),
   class = c(
     "Open Water",
@@ -65,34 +76,50 @@ lut <- data.frame(
   )
 )
 
+if (product == "LndChg") {
+  # Build every AABB "previous class to current class" code from lut_base:
+  # for each class AA, pair it with every other class BB (self-transitions
+  # don't exist, since a "no change" pixel just keeps its 2-digit value).
+  change_rows <- do.call(rbind, lapply(seq_len(nrow(lut_base)), function(ai) {
+    bb_idx <- setdiff(seq_len(nrow(lut_base)), ai)
+    data.frame(
+      value = as.numeric(paste0(lut_base$value[ai], lut_base$value[bb_idx])),
+      class = paste(lut_base$class[ai], "to", lut_base$class[bb_idx])
+    )
+  }))
+  lut <- rbind(lut_base, change_rows)
+} else {
+  lut <- lut_base
+}
+
 
 # ## single year for test ####
 # year <- 2024
-# 
+#
 # input_file_path <- input_nlcd_path(product, year, version)
 # input_file_name <- paste0(product, year, "V", version)
-# 
+#
 # if (!file.exists(input_file_path)) {
 #   stop(paste("Skipping –", input_file_name, "not available"))
 # }
-# 
+#
 # nlcd <- rast(input_file_path)
 # levels(nlcd) <- lut
-# 
+#
 # # Output directory for per-route rds files
 # dir.create(here::here("output", "routes_1km", year),
 #            showWarnings = FALSE, recursive = TRUE)
-# 
+#
 # results <- vector("list", nrow(buffer_1km_proj))
-# 
+#
 # for (i in seq_len(nrow(buffer_1km_proj))) {
 #   if (i %% 100 == 0) cat("  Processing line", i, "of", nrow(buffer_1km_proj), "\n")
-#   
+#
 #   # Transform buffer to raster CRS
 #   buf_raster_crs <- st_transform(buffer_1km_proj[i, ], crs = crs(nlcd))
 #   # buf_raster_crs <- st_transform(buffer_1km_proj[1, ], crs = crs(nlcd))
 #   buf_vect <- vect(buf_raster_crs)
-#   
+#
 #   # Crop and mask raster to buffer (skip if outside raster extent)
 #   freq_table <- tryCatch({
 #     lc_cropped <- crop(nlcd, buf_vect)
@@ -102,16 +129,16 @@ lut <- data.frame(
 #     cat("  Skipped", buffer_1km_proj$StateNum[i], "_", buffer_1km_proj$Route[i], ":", conditionMessage(e), "\n")
 #     NULL
 #   })
-#   
+#
 #   # print(freq_table)
-# 
+#
 #   freq_table2 <- freq_table %>%
 #     rename(class = value) %>%
 #     left_join(lut, by = "class") %>%
 #     select(layer, value, class, count)
-# 
+#
 #   # freq_table2
-#   
+#
 #   # Save full frequency table per route
 #   rds_name <- paste0(input_file_name, "_", buffer_1km_proj$StateNum[i], "_", buffer_1km_proj$Route[i], ".rds")
 #   saveRDS(freq_table2, here::here("output", "routes_1km", year, rds_name))
@@ -143,12 +170,12 @@ for (year in years) {
 
   for (i in seq_len(nrow(buffer_1km_proj))) {
     if (i %% 100 == 0) cat("  Processing line", i, "of", nrow(buffer_1km_proj), "\n")
-    
+
     # Transform buffer to raster CRS
     buf_raster_crs <- st_transform(buffer_1km_proj[i, ], crs = crs(nlcd))
     # buf_raster_crs <- st_transform(buffer_1km_proj[1, ], crs = crs(nlcd))
     buf_vect <- vect(buf_raster_crs)
-    
+
     # Crop and mask raster to buffer (skip if outside raster extent)
     freq_table <- tryCatch({
       lc_cropped <- crop(nlcd, buf_vect)
@@ -167,8 +194,8 @@ for (year in years) {
       rename(class = value) %>%
       left_join(lut, by = "class") %>%
       select(layer, value, class, count)
-    
-    
+
+
     # Save full frequency table per route.
     # Coerce StateNum/Route to integers so leading zeros (e.g. "02", "001")
     # are stripped, keeping filenames consistent with 4_calculate_nlcd.R.
@@ -176,7 +203,7 @@ for (year in years) {
     route_num <- as.integer(buffer_1km_proj$Route[i])
     rds_name <- paste0(input_file_name, "_", state_num, "_", route_num, ".rds")
     saveRDS(freq_table2, here::here("output", "routes_1km", year, rds_name))
-  
+
   }
   cat("  Year", year, "done.", "\n")
 }
