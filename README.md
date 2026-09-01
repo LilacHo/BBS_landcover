@@ -15,8 +15,7 @@ category per route per year.
 ## Pipeline
 
 Run the scripts in `code/` in order. Each one consumes the output of the
-previous step. To run the whole pipeline at once, use `code/run_all.R`
-(see [Running the pipeline](#running-the-pipeline)).
+previous step.
 
 | Step | Script | Purpose |
 |------|--------|---------|
@@ -32,14 +31,6 @@ pipeline but operate on its outputs:
 
 - `4_check_collinearity.R` — checks collinearity between two land-cover
   proportion outputs from Step 3 (see [below](#support-script--4_check_collinearityr)).
-
-`code/archive/` holds exploratory analyses and earlier prototype scripts that
-are **not** part of the numbered pipeline, kept for reference:
-
-- `1_compare_crs_3857_vs_5070.R` — compares point-to-line matching under
-  EPSG:3857 vs EPSG:5070.
-- `3_SinglePoint_v0.R`, `3_SinglePoint_v1.R`, `3_SinglePoint_v2.R` — earlier
-  single-point prototypes of the buffer/tabulation step.
 
 ### Step 1 — `1_prepare_routes.R`
 Matches each route point to a route line using a 3-step funnel; each step only
@@ -85,10 +76,6 @@ product <- "LndCov"   # "LndCov" or "LndChg"
 - **Output:** `output/routes_1km/<year>/<product><year>V<version>_<StateNum>_<Route>.rds`
   (columns: `layer`, `value`, `class`, `count`)
 
-A standalone `code/2_prepare_nlcd_LndChg.R` is also kept alongside it — it
-hardcodes `product <- "LndChg"` and its full 256-row lookup table, for running
-the change product on its own without touching the `product` setting above.
-
 #### Land Cover Change codes (AABB)
 The `LndChg` product encodes each pixel as follows:
 
@@ -115,6 +102,14 @@ chosen land-cover category, and writes a single combined CSV.
   excluding Alaska `StateNum == 3`), the `.rds` tables from Step 2
 - **Output:** `output/<target_name>.csv` (e.g. `output/aridlands.csv`)
 
+`3_calculate_nlcd.R` reads `.rds` tables from Step 2, so `product` here must
+match whichever product those tables were built from (`LndCov` by default;
+switch to `LndChg` only if Step 2 was run with `product <- "LndChg"`):
+
+```r
+product <- "LndCov" # "LndCov" or "LndChg"
+```
+
 Select the target category by setting a single line near the top of the
 script. The pixel values are looked up automatically from the `target_index`
 table, so you only provide the name:
@@ -134,6 +129,7 @@ categories (NLCD pixel values):
 | `forests` | `c(41, 42, 43)` |
 | `croplands` | `c(81, 82)` |
 | `Anthro` | `c(21, 22, 23, 24, 81, 82)` (developed + croplands) |
+| `grasslands to Anthro` | `c(7121, 7122, 7123, 7124, 7181, 7182)` — **LndChg** codes only (Grassland/Herbaceous converted to any Anthro class); requires Step 2's `.rds` tables to have been built with `product <- "LndChg"` |
 
 To add a new category, add a row to the `target_index` table in the script.
 If `target_name` is not found in the table, the script stops with an error.
@@ -141,6 +137,9 @@ If `target_name` is not found in the table, the script stops with an error.
 The pixel values above follow the NLCD land-cover legend:
 
 ![Annual NLCD land-cover legend](docs/Annual_NLCD_Land_Cover_Legend.jpg)
+
+For the `LndChg` AABB codes (like the `grasslands to Anthro` row above), see
+the [Land Cover Change codes](#land-cover-change-codes-aabb) table in Step 2.
 
 ### Support script — `4_check_collinearity.R`
 Checks collinearity between any two of the per-category CSVs produced by

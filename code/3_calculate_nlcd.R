@@ -22,6 +22,8 @@
 #   To add a new category, add a row to `target_index`.
 # ---------------------------------------------------------------
 
+rm(list = ls())
+
 library(here)
 library(tidyverse)
 
@@ -37,16 +39,16 @@ target_index <- tibble::tribble(
   ~target_name,  ~target_values,
   "developed",   c(21, 22, 23, 24),
   "aridlands",   c(31, 52),
-  "grasslands",  c(71),
   "forests",     c(41, 42, 43),
-  "croplands",   c(81, 82),
   "Anthro",      c(21, 22, 23, 24, 81, 82),
   # LndChg code
-  "grasslands to Anthro", c(7121, 7122, 7123, 7124, 7181, 7182)
+  "forests to Anthro", c(4121, 4122, 4123, 4124, 4181, 4182, 
+                        4221, 4222, 4223, 4224, 4281, 4282, 
+                        4321, 4322, 4323, 4324, 4381, 4382)
 )
 
 # ---- Pick the category by name; values are assigned automatically ----
-target_name <- "grasslands"
+target_name <- "Anthro"
 
 if (!target_name %in% target_index$target_name) {
   stop("Unknown target_name '", target_name, "'. Available: ",
